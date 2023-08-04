@@ -10,6 +10,8 @@ import pandas as pd
 import serial
 import numpy as np
 
+##############################################################
+
 raw = serial.Serial(port='COM6', baudrate=20000000, timeout=1)
 nSample = 1024
 
@@ -114,13 +116,12 @@ if __name__ == '__main__':
         plot.update_max_index(spect)
 
     try:
-        while raw.is_open():
-            raw.flushInput()
-            raw.flushOutput()
-            timer = QtCore.QTimer()
-            timer.timeout.connect(update)
-            timer.start(1)
-            plot.run()
+        raw.flushInput()
+        raw.flushOutput()
+        timer = QtCore.QTimer()
+        timer.timeout.connect(update)
+        timer.start(1)
+        plot.run()
     except KeyboardInterrupt: # masih ada masalah
         plot.stop()
         convertDatatoExcel(raw_data, 'rawdata')

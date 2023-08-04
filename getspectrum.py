@@ -79,8 +79,12 @@ def spectrum(array: list[int], nSampleX):
     return sdB
 
 def getPeak(array: list[int], height=40, prominence=0.4, width=1):
-    peak, _ = signal.find_peaks(array, height=height, prominence=prominence, width=width)
-    return max(peak)
+    peaks, _ = signal.find_peaks(array, height=height, prominence=prominence, width=width)
+    ignore_index = np.arange(0, 101)
+    
+    filtered_peaks = [peak for peak in peaks if peak not in ignore_index]
+    
+    return filtered_peaks
 
 """
 if __name__ == '__main__':
