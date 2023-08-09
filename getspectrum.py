@@ -35,48 +35,6 @@ def convertDatatoExcel(array: list[int], excel: str):
     """
     df = convertDatatoDf(array)
     df.to_excel(f'{excel}.xlsx')
-    
-def fastFourierTransform(array: list[int], fs = 1/400, nSample = 1024):
-    """
-    menerima masukan berupa list array dan keluaran berupa 
-    hasil fft, magnituda dan fasa
-    
-    """
-    s_fft = np.fft.rfft(array)
-    s_mag = np.abs(s_fft)  # magnitude spectrum
-    s_phase = np.angle(s_fft, deg=True) #phase spectrum
-    s_freq = np.fft.rfftfreq(nSample)*fs
-    
-    return s_fft, s_mag, s_phase, s_freq
-
-def preprocessing(array: list[list], nSampleX, nSample=1024):
-    array[nSampleX:nSample] = 0
-    array = array - np.mean(array)
-    #array = signal.medfilt(array)
-    #array = signal.wiener(array)
-    #array = signal.detrend(array) #kurangi sama nilai rata-rata
-    array[nSampleX:nSample] = 0 #set remaining values to zero
-    array = array*np.hamming(nSample) #windowing using hamming
-    
-    return array
-
-# def rangeDopplerMatrix(array: list[int]):
-
-#     range_doppler_matrix = fftshift(fft2(array))
-    
-#     return range_doppler_matrix
-
-def spectrum(array: list[int], nSampleX):
-    """
-    menerima masukan berupa list array dan keluaran berupa 
-    Power Spectral Density (PSD) terhadap mean
-    
-    """
-    s_fft, s_mag, s_phase, s_freq= fastFourierTransform(array) #fft
-    sdB = 20*np.log10(s_mag/(nSampleX) + 0.001) #bikin ke skala logaritma
-    sdB = sdB*sdB/15 #meningkatkan kontras
-    
-    return sdB
 
 def getPeak(array: list[int], height=40, prominence=0.4, width=1):
     peaks, _ = signal.find_peaks(array, height=height, prominence=prominence, width=width)

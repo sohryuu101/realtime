@@ -5,13 +5,12 @@ from PyQt6.QtGui import *
 from PyQt6.QtCore import *
 import pyqtgraph as pg
 import sys
-from getspectrum import preprocessing, spectrum, readExcelData, getPeak, spectrum, convertDatatoDf
+from getspectrum import preprocessing, spectrum, getPeak, spectrum, convertDatatoDf
 import numpy as np
 import random 
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.figure import Figure
-from matplotlib.animation import FuncAnimation
 import serial
 
 #######################################################################
@@ -83,7 +82,7 @@ class MainWindow(QMainWindow):
         
         if self.radius < max(self.ax.get_ylim()):
             self.radius += 100.0
-        # else: self.radius = 100
+        else: self.radius = 100
         
         self.canvas.draw()
 
@@ -94,6 +93,7 @@ if __name__ == '__main__':
     timer = QtCore.QTimer()
     timer2 = QtCore.QTimer()
     def update():
+        timer2.start(100)
         dat1 = raw.read(nSample*2) # Read raw data from serial
         dat2 = np.frombuffer(dat1, dtype='int16', offset=0) # Convert to int16
         
@@ -112,7 +112,7 @@ if __name__ == '__main__':
         if len(peak) != 0 :
             plot.update_dot(peak)
             timer2.stop()
-        else: timer2.start(100)
+        # else: timer2.start(100)
            
     try:
         raw.flushInput()
