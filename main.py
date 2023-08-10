@@ -9,6 +9,7 @@ import pandas as pd
 import serial
 import numpy as np
 from scipy import signal
+from collections import Counter
 ##############################################################
 
 raw = serial.Serial(port='COM6', baudrate=20000000, timeout=1)
@@ -47,15 +48,15 @@ class Plot():
     
     def update_spectrum(self, data):
         self.spectrum_plot.setData(data)
-        self.rawdata.showGrid(y=True)
+        self.spectrum.showGrid(y=True)
         
     def update_range(self, nSampleX):
         self.rawdata.setRange(xRange=[0, nSampleX]) # Set range to plot
         
     def update_max_index(self, data):
         # index = getPeak(data)
-        index = np.argmax(data)
-        self.max_index.setText(f'Max Index: {index}')
+        # index = np.argmax(data)
+        self.max_index.setText(f'Max Index: {data}')
         
     def run(self):
         self.app.instance().exec_()
@@ -68,7 +69,8 @@ if __name__ == '__main__':
     
     raw_data = []
     spectrum_data = []
-    
+    temp_raw = []
+    temp_spect = []
     def convertDatatoDf(array: list[int]):
         df = pd.DataFrame(array)
         df.index = [f'Nilai ke-{i+1}' for i in range(len(df))]
@@ -78,9 +80,19 @@ if __name__ == '__main__':
         df = convertDatatoDf(array)
         df.to_excel(f'{excel}.xlsx')
         
-    # def getPeak(array: list[int], height=30):
-    #     peaks, _ = signal.find_peaks(array, height=height)
-    #     return peaks
+    def getPeak(array: list[int], height=0):
+        # peaks, _ = signal.find_peaks(array, height=height)
+        peak = np.argmax(array[:100])
+        return peak
+
+    def most_common_peak(array):
+        # Count the occurrences of each element in the array
+        count = Counter(array)
+        
+        # Find the most common element and its count
+        most_common = count.most_common(1)
+        
+        return most_common[0][0] if most_common else None
 
     def update():
         dat1 = raw.read(nSample*2) # Read raw data from serial
@@ -89,8 +101,8 @@ if __name__ == '__main__':
         s = np.array(dat2[0:nSample]) # Make np array
         
         nSampleX = s[nSample-2]
-        sf = s[nSample-3]
-        prf = s[nSample-4]
+        # fs = s[nSample-3]
+        # prf = s[nSample-4]
         plot.update_range(nSampleX)
         
         s[nSampleX:nSample] = 0
@@ -100,27 +112,42 @@ if __name__ == '__main__':
         
         raw = s
         plot.update_rawdata(raw)
-        raw_data.append(raw)
-        
         spectrum = 20*np.log10(abs(np.fft.rfft(s))/(nSampleX) + 0.001) #bikin ke skala logaritma
         spectrum = spectrum*spectrum/15 #meningkatkan kontras
         
-        spectrum_data.append(spectrum)
+        temp_spect.append(spectrum[:100])
+        temp_raw.append(raw)
         plot.update_spectrum(spectrum[:100])
-        plot.update_max_index(spectrum[:100])
+        process()
+        # plot.update_max_index(spectrum[:100])
         
+    def process():
+        global temp_spect, temp_raw
+        peaks = []
+        if len(temp_spect) == 5:
+            for i in range(5):
+                peak = getPeak(temp_spect[i])
+                print(peak)
+                peaks.append(peak)
+            print('#####')
+            cpeak = most_common_peak(peaks)
+            plot.update_max_index(cpeak)
+        elif len(temp_spect) > 5: 
+            temp_spect = []
+            temp_raw = []
+            
     try:
-        raw.flushInput()
-        raw.flushOutput()
-        timer = QtCore.QTimer()
-        timer.timeout.connect(update)
-        timer.start(1)
-        plot.run()
+        while True:
+            raw.flushInput()
+            raw.flushOutput()
+            timer = QtCore.QTimer()
+            timer.timeout.connect(update)
+            timer.start(1)
+            plot.run()   
     except KeyboardInterrupt: # masih ada masalah
         plot.stop()
+        raw.close()
         convertDatatoExcel(raw_data, 'rawdata')
         convertDatatoExcel(spectrum_data, 'spectrum')
         print("Data collection stopped.")
-        sys.exit()
-
-            
+        sys.exit()    
