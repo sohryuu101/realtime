@@ -12,7 +12,7 @@ from scipy import signal
 from collections import Counter
 ##############################################################
 
-raw = serial.Serial(port='COM6', baudrate=20000000, timeout=1)
+ser = serial.Serial(port='COM6', baudrate=20000000, timeout=1)
 nSample = 1024
 
 class Plot():
@@ -24,7 +24,7 @@ class Plot():
         self.windowplot = pg.GraphicsLayoutWidget()
         self.windowplot.setFixedWidth(1000)
 
-        # Set up for raw data plot
+        # Set up for ser data plot
         self.rawdata = self.windowplot.addPlot(row=0, col=0, title='Raw Data Plot') # Add subplot to window
         self.rawdata.setRange(xRange=[0, nSample]) # Set range to plot 
         self.rawdata_plot = self.rawdata.plot(pen='y')
@@ -68,6 +68,7 @@ if __name__ == '__main__':
     raw_data = []
     spectrum_data = []
     temp_spect = []
+
     def convertDatatoDf(array: list[int]):
         df = pd.DataFrame(array)
         df.index = [f'Nilai ke-{i+1}' for i in range(len(df))]
@@ -92,13 +93,13 @@ if __name__ == '__main__':
         return most_common[0][0] if most_common else None
 
     def update():
-        global temp_spect
-        dat1 = raw.read(nSample*2) # Read raw data from serial
+        dat1 = ser.read(nSample*2) # Read ser data from serial
         dat2 = np.frombuffer(dat1, dtype='int16', offset=0) # Convert to int16
         
         s = np.array(dat2[0:nSample]) # Make np array
         
         nSampleX = s[nSample-2]
+        # nSampleX = 400
         # fs = s[nSample-3]
         # prf = s[nSample-4]
         plot.update_range(nSampleX)
@@ -124,9 +125,7 @@ if __name__ == '__main__':
         if len(temp_spect) == 5:
             for i in range(5):
                 peak = getPeak(temp_spect[i])
-                print(peak)
                 peaks.append(peak)
-            print('#####')
             cpeak = most_common_peak(peaks)
             plot.update_max_index(cpeak)
         elif len(temp_spect) > 5: 
@@ -134,15 +133,15 @@ if __name__ == '__main__':
             
     try:
         while True:
-            raw.flushInput()
-            raw.flushOutput()
+            ser.flushInput()
+            ser.flushOutput()
             timer = QtCore.QTimer()
             timer.timeout.connect(update)
             timer.start(1)
             plot.run()   
     except KeyboardInterrupt: # masih ada masalah
         plot.stop()
-        raw.close()
+        ser.close()
         convertDatatoExcel(raw_data, 'rawdata')
         convertDatatoExcel(spectrum_data, 'spectrum')
         print("Data collection stopped.")
