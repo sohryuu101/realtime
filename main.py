@@ -54,8 +54,6 @@ class Plot():
         self.rawdata.setRange(xRange=[0, nSampleX]) # Set range to plot
         
     def update_max_index(self, data):
-        # index = getPeak(data)
-        # index = np.argmax(data)
         self.max_index.setText(f'Max Index: {data}')
         
     def run(self):
@@ -69,7 +67,6 @@ if __name__ == '__main__':
     
     raw_data = []
     spectrum_data = []
-    temp_raw = []
     temp_spect = []
     def convertDatatoDf(array: list[int]):
         df = pd.DataFrame(array)
@@ -95,6 +92,7 @@ if __name__ == '__main__':
         return most_common[0][0] if most_common else None
 
     def update():
+        global temp_spect
         dat1 = raw.read(nSample*2) # Read raw data from serial
         dat2 = np.frombuffer(dat1, dtype='int16', offset=0) # Convert to int16
         
@@ -116,13 +114,12 @@ if __name__ == '__main__':
         spectrum = spectrum*spectrum/15 #meningkatkan kontras
         
         temp_spect.append(spectrum[:100])
-        temp_raw.append(raw)
         plot.update_spectrum(spectrum[:100])
         process()
         # plot.update_max_index(spectrum[:100])
         
     def process():
-        global temp_spect, temp_raw
+        global temp_spect
         peaks = []
         if len(temp_spect) == 5:
             for i in range(5):
@@ -134,7 +131,6 @@ if __name__ == '__main__':
             plot.update_max_index(cpeak)
         elif len(temp_spect) > 5: 
             temp_spect = []
-            temp_raw = []
             
     try:
         while True:
