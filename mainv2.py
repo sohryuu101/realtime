@@ -5,16 +5,16 @@ from PyQt6.QtGui import *
 from PyQt6.QtCore import *
 import pyqtgraph as pg
 import sys
-from getspectrum import preprocessing, spectrum, getPeak, spectrum, convertDatatoDf
 import numpy as np
 import random 
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.figure import Figure
 import serial
-
+from collections import Counter
+from scipy import signal
 #######################################################################
-raw = serial.Serial(port='COM6', baudrate=20000000, timeout=1)
+ser = serial.Serial(port='COM6', baudrate=20000000, timeout=1)
 nSample = 1024
 
 class MainWindow(QMainWindow):
@@ -97,9 +97,23 @@ if __name__ == '__main__':
     temp_spect = []
     
     timer = QtCore.QTimer()
+    
+    def getPeak(array: list[int], height=0):
+        # peaks, _ = signal.find_peaks(array, height=height)
+        peak = np.argmax(array[:100])
+        return peak
+
+    def most_common_peak(array):
+        # Count the occurrences of each element in the array
+        count = Counter(array)
+        
+        # Find the most common element and its count
+        most_common = count.most_common(1)
+        
+        return most_common[0][0] if most_common else None
     def update():
         global temp_spect
-        dat1 = raw.read(nSample*2) # Read raw data from serial
+        dat1 = ser.read(nSample*2) # Read ser data from serial
         dat2 = np.frombuffer(dat1, dtype='int16', offset=0) # Convert to int16
         
         s = np.array(dat2[0:nSample]) # Make np array
@@ -124,8 +138,8 @@ if __name__ == '__main__':
            
     try:
         while True:
-            raw.flushInput()
-            raw.flushOutput()
+            ser.flushInput()
+            ser.flushOutput()
             timer.timeout.connect(update)
             timer.start(1)
         
