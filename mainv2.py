@@ -27,15 +27,18 @@ class MainWindow(QMainWindow):
 
         # Create the Matplotlib figure and canvas
         self.figure = Figure(figsize=(8, 6), facecolor='k', tight_layout=True)
+        self.figurex = Figure(figsize=(8, 6), facecolor='k', tight_layout=True)
         self.canvas = FigureCanvas(self.figure)
+        self.canvasx = FigureCanvas(self.figurex)
         layout.addWidget(self.canvas)
+        layout.addWidget(self.canvasx)
         
         # Initiate Variables
         # self.radius = 0
         # self.angles = np.linspace(0, np.pi, 100)
         
         # Set up for ax
-        self.ax = self.figure.add_subplot(121, projection='polar', facecolor='#006d70')
+        self.ax = self.figure.add_subplot(111, projection='polar', facecolor='#006d70')
         # self.ax.set_position([-0.05,-0.05,1.1,1.05])
         self.ax.set_xlim([0.0,np.pi]) # peak of angle to show
         self.ax.set_ylim([0.0,100]) # peak of distances to show
@@ -45,14 +48,14 @@ class MainWindow(QMainWindow):
         self.ax.text(0.5, -0.01, "Jarak: 0", size=12, ha='center', c='w', transform=self.ax.transAxes)
         
         # Set up for ax2
-        self.ax2 = self.figure.add_subplot(222, facecolor='#000000')
+        self.ax2 = self.figurex.add_subplot(121, facecolor='#000000')
         self.ax2.set_title('Spectrum', c='w')
         self.ax2.tick_params(axis='both',colors='w')
         self.ax2.spines['bottom'].set_color('w')
         self.ax2.spines['left'].set_color('w')
         self.canvas.draw()
         
-        self.ax3 = self.figure.add_subplot(224, facecolor='#000000')
+        self.ax3 = self.figurex.add_subplot(122, facecolor='#000000')
         self.ax3.set_title('Raw Data', c='w')
         self.ax3.tick_params(axis='both',colors='w')
         self.ax3.spines['bottom'].set_color('w')
@@ -60,7 +63,8 @@ class MainWindow(QMainWindow):
         
         plt.tight_layout()
         self.canvas.draw()
-
+        self.canvasx.draw()
+        
         self.show()
         
     def update_dot(self, peak):
@@ -84,11 +88,13 @@ class MainWindow(QMainWindow):
         self.ax2.set_title('Raw Data', c='w')
         self.ax2.plot(data, c='y')
         # self.ax2.set_xlim([0, 500])
+        self.canvasx.draw()
     
     def update_spectrum(self, data):
         self.ax3.clear()
         self.ax3.set_title('Spektrum', c='w')
         self.ax3.plot(data, c='y')
+        self.canvasx.draw()
 
 if __name__ == '__main__':
     app = QApplication([])
