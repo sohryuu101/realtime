@@ -23,7 +23,7 @@ class MainWindow(QMainWindow):
         #self.setWindowTitle("PPI")
         self.main_widget = QWidget(self)
         self.setCentralWidget(self.main_widget)
-        layout = QVBoxLayout(self.main_widget)
+        layout = QHBoxLayout(self.main_widget)
 
         # Create the Matplotlib figure and canvas
         self.figure = Figure(figsize=(8, 6), facecolor='k', tight_layout=True)
@@ -41,21 +41,22 @@ class MainWindow(QMainWindow):
         self.ax = self.figure.add_subplot(111, projection='polar', facecolor='#006d70')
         # self.ax.set_position([-0.05,-0.05,1.1,1.05])
         self.ax.set_xlim([0.0,np.pi]) # peak of angle to show
-        self.ax.set_ylim([0.0,100]) # peak of distances to show
-        self.ax.set_rticks([0, 20, 40, 60, 80, 100]) # show 5 different distances
+        self.ax.set_ylim([0.0,10]) # peak of distances to show
+        self.ax.set_rticks([0, 2, 4, 6, 8, 10]) # show 5 different distances
         self.ax.tick_params(axis='both',colors='w')
         self.ax.grid(color='w',alpha=0.5) # grid color
         self.ax.text(0.5, -0.01, "Jarak: 0", size=12, ha='center', c='w', transform=self.ax.transAxes)
         
         # Set up for ax2
-        self.ax2 = self.figurex.add_subplot(121, facecolor='#000000')
+        self.ax2 = self.figurex.add_subplot(211, facecolor='#000000')
         self.ax2.set_title('Spectrum', c='w')
         self.ax2.tick_params(axis='both',colors='w')
+        self.ax2.set_xlim([0.0, 200])
         self.ax2.spines['bottom'].set_color('w')
         self.ax2.spines['left'].set_color('w')
         self.canvas.draw()
         
-        self.ax3 = self.figurex.add_subplot(122, facecolor='#000000')
+        self.ax3 = self.figurex.add_subplot(212, facecolor='#000000')
         self.ax3.set_title('Raw Data', c='w')
         self.ax3.tick_params(axis='both',colors='w')
         self.ax3.spines['bottom'].set_color('w')
@@ -71,23 +72,23 @@ class MainWindow(QMainWindow):
         self.ax.clear()
         # self.ax.set_position([-0.05,-0.05,1.1,1.05])
         self.ax.set_xlim([0.0,np.pi])
-        self.ax.set_ylim([0.0,100]) # peak of distances to show
-        self.ax.set_rticks([0, 20, 40, 60, 80, 100]) # show 5 different distances
+        self.ax.set_ylim([0.0,10]) # peak of distances to show
+        self.ax.set_rticks([0, 2, 4, 6, 8, 10]) # show 5 different distances
         self.ax.tick_params(axis='both',colors='w')
         self.ax.grid(color='w',alpha=0.5) # grid color
-        # random_theta = random.uniform(0, np.pi)
-        random_theta = np.pi/2
+        random_theta = random.uniform(0, np.pi)
+        # random_theta = np.pi/2
         # self.radius = 0
         # Plot the polar data
         self.ax.scatter(random_theta, peak, c='w')
-        self.ax.text(0.5, -0.01, f"Jarak: {peak} m", size=12, ha='center', c='w', transform=self.ax.transAxes)
+        self.ax.text(0.5, -0.01, f"Jarak: {peak: .2f} m", size=12, ha='center', c='w', transform=self.ax.transAxes)
         self.canvas.draw()
     
     def update_rawdata(self, data):
         self.ax2.clear()
         self.ax2.set_title('Raw Data', c='w')
         self.ax2.plot(data, c='y')
-        # self.ax2.set_xlim([0, 500])
+        self.ax2.set_xlim([0, 200])
         self.canvasx.draw()
     
     def update_spectrum(self, data):
@@ -117,6 +118,13 @@ if __name__ == '__main__':
         most_common = count.most_common(1)
         
         return most_common[0][0] if most_common else None
+    
+    def to_range(peak):
+        # insert operation here
+        ra = peak*0.0576 + 0.7288
+        
+        return ra
+    
     def update():
         global temp_spect
         dat1 = ser.read(nSample*2) # Read ser data from serial
@@ -137,10 +145,25 @@ if __name__ == '__main__':
         spectrum = 20*np.log10(abs(np.fft.rfft(s))/(nSampleX) + 0.001) #bikin ke skala logaritma
         spectrum = spectrum*spectrum/15 #meningkatkan kontras
         
-        temp_spect.append(spectrum[:100])
-        plot.update_spectrum(spectrum[:100])
-        peak = getPeak(spectrum[:100])
-        plot.update_dot(peak)
+        temp_spect.append(spectrum[50:150])
+        plot.update_spectrum(spectrum[50:150])
+        # peak = getPeak(spectrum[:100])
+        # plot.update_dot(peak)
+        
+        process()
+        
+    def process():
+        global temp_spect
+        peaks = []
+        if len(temp_spect) == 5:
+            for i in range(5):
+                peak = getPeak(temp_spect[i])
+                peaks.append(peak)
+            cpeak = most_common_peak(peaks)
+            ra = to_range(cpeak)
+            plot.update_dot(ra)
+        elif len(temp_spect) > 5: 
+            temp_spect = []
            
     try:
         while True:
