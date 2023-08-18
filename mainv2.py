@@ -76,10 +76,18 @@ class MainWindow(QMainWindow):
         self.ax.set_rticks([0, 2, 4, 6, 8, 10]) # show 5 different distances
         self.ax.tick_params(axis='both',colors='w') # set tick's color to white
         self.ax.grid(color='w',alpha=0.5) # grid color
-        random_theta = random.uniform(0, np.pi) # random theta 
+        
+        random_theta = random.uniform(0, np.pi) # one random theta 
+        # random_theta = [random.uniform(0, np.pi) for _ in range(len(range_value))] # multiple random theta
 
         # Plot the polar data
         self.ax.scatter(random_theta, range_value, c='w') # scatter plot
+        
+        # to add text to plot with multiple objects
+        # for i, rangeval in enumerate(range_value):
+        #     self.ax.annotate(f"{rangeval: .2f} m", (random_theta[i], range_value[i]), textcoords="offset points", xytext=(0,10), ha='center', c='w') # add range label to dot
+        
+        #to add text to plot with one object
         self.ax.annotate(f"{range_value: .2f} m", (random_theta, range_value), textcoords="offset points", xytext=(0,10), ha='center', c='w') # add range label to dot
         self.canvas.draw()
     
@@ -122,22 +130,22 @@ if __name__ == '__main__':
     
     timer = QtCore.QTimer()
     
-    def getPeak(array: list[int]):
+    def getPeak(array: list[float]):
         """
         This function finds the index of the peak in the array. 
         
         Parameters:
-            - array: A list of integers representing the array to be searched for peaks.
+            - array: A list of floats representing the array to be searched for peaks.
             - height: An optional parameter representing the minimum height of the peaks to be considered.
 
         Returns:
             - peak: The index of the peak in the array.
         """
-        # use scipy.signal to find more than one peak with minimum height
-        # peaks, _ = signal.find_peaks(array, height=height)
+        # use scipy.signal to find more than one peak with minimum height and any other parameters
+        # peaks, _ = signal.find_peaks(array, height=40)
         peak = np.argmax(array[:100]) # max value of array
         return peak
-
+    
     def most_common_peak(array):
         """
         Find the most common peak in an array.
@@ -171,6 +179,23 @@ if __name__ == '__main__':
         
         return ra
     
+    def to_range_2(peaks: list[int]):
+        """
+        Calculates the range of values for each peak in the given list.
+
+        Parameters:
+            peaks (list[int]): A list of peak values.
+
+        Returns:
+            list[float]: A list of range values calculated for each peak.
+        """
+        ranges = []
+        for i in range(len(peaks)):
+            ra = peaks[i]*0.0576 + 0.7288
+            ranges.append(ra)
+            
+        return ranges
+    
     def update():
         """
         Update function to read data from serial, process the data, and update the plot.
@@ -203,6 +228,10 @@ if __name__ == '__main__':
         
         temp_spect.append(spectrum[50:150]) # store every 5 spectrum
         plot.update_spectrum(spectrum[50:150]) # update spectrum
+        
+        # peaks = getPeak(spectrum[50:150])
+        # ranges = to_range_2(peaks)
+        # plot.update_dot(ranges) # update dot
         
         process() # process every 5 spectrum to find peak
         
