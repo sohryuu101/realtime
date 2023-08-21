@@ -13,6 +13,7 @@ from matplotlib.figure import Figure
 import serial
 from collections import Counter
 from scipy import signal
+from matplotlib.animation import FuncAnimation
 #######################################################################
 ser = serial.Serial(port='COM6', baudrate=20000000, timeout=1)
 nSample = 1024
@@ -121,6 +122,9 @@ class MainWindow(QMainWindow):
         self.ax3.set_title('Spektrum', c='w') # set title
         self.ax3.plot(spectrum_data, c='y') # plot the spectrum
         self.canvasx.draw() 
+        
+    def start_animation(self):
+        self.anim = FuncAnimation(self.canvas, self.update_dot, interval=1)
 
 if __name__ == '__main__':
     app = QApplication([])
