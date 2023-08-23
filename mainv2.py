@@ -27,37 +27,19 @@ class MainWindow(QMainWindow):
 
         # create the matplotlib figure and canvas
         self.figure = Figure(figsize=(8, 6), facecolor='k', tight_layout=True)
-        self.figurex = Figure(figsize=(8, 6), facecolor='k', tight_layout=True)
         self.canvas = FigureCanvas(self.figure)
-        self.canvasx = FigureCanvas(self.figurex)
         layout.addWidget(self.canvas)
-        layout.addWidget(self.canvasx)
         
-        # set up for ax
-        self.ax = self.figure.add_subplot(111, projection='polar', facecolor='#006d70') # add figure
-        self.ax.set_xlim([0.0,np.pi]) # peak of angle to show
-        self.ax.set_ylim([0.0,10]) # peak of distances to show
+        self.ax = self.figure.add_subplot(111, projection='polar', facecolor='black')
+        self.ax.set_xlim([0.0,np.pi]) # set x limit
+        self.ax.spines['polar'].set_color('#39ff14') # set spine color
+        self.ax.spines['polar'].set_linewidth(1.0) # set spine width
+        self.ax.set_ylim([0.0,10]) # set distances limit
         self.ax.set_rticks([0, 2, 4, 6, 8, 10]) # show 5 different distances
-        self.ax.tick_params(axis='both',colors='w') # set tick's color to white
-        self.ax.grid(color='w',alpha=0.5) # grid color
-        
-        # set up for ax2
-        self.ax2 = self.figurex.add_subplot(211, facecolor='#000000') # add figure
-        self.ax2.set_title('Spectrum', c='w') # set title
-        self.ax2.tick_params(axis='both',colors='w') # set tick's color to white
-        self.ax2.spines['bottom'].set_color('w') # set bottom spine's color to white
-        self.ax2.spines['left'].set_color('w') # set left spine's color to white
-        self.canvas.draw()
-        
-        # set up for ax3
-        self.ax3 = self.figurex.add_subplot(212, facecolor='#000000') # add figure
-        self.ax3.set_title('Raw Data', c='w') # set title
-        self.ax3.tick_params(axis='both',colors='w') # set tick's color to white
-        self.ax3.spines['bottom'].set_color('w') # set bottom spine's color to white
-        self.ax3.spines['left'].set_color('w') # set left spine's color to white
+        self.ax.tick_params(axis='both',colors='#39ff14') # set tick's color 
+        self.ax.grid(color='#2bd208',alpha=0.3, linewidth=1) # grid color
         
         self.canvas.draw()
-        self.canvasx.draw()
         
         self.show()
         
@@ -75,53 +57,17 @@ class MainWindow(QMainWindow):
         self.ax.set_xlim([0.0,np.pi]) # set x limit
         self.ax.set_ylim([0.0,10]) # set distances limit
         self.ax.set_rticks([0, 2, 4, 6, 8, 10]) # show 5 different distances
-        self.ax.tick_params(axis='both',colors='w') # set tick's color to white
-        self.ax.grid(color='w',alpha=0.5) # grid color
+        self.ax.tick_params(axis='both',colors='#39ff14') # set tick's color to white
+        self.ax.spines['polar'].set_linewidth(1.0)
+        self.ax.grid(color='#2bd208',alpha=0.3, linewidth=1) # grid color
+        self.theta = np.linspace(0, np.pi, 100)
         
-        random_theta = random.uniform(0, np.pi) # one random theta 
-        # random_theta = [random.uniform(0, np.pi) for _ in range(len(range_value))] # multiple random theta
-
-        # Plot the polar data
-        self.ax.scatter(random_theta, range_value, c='w') # scatter plot
-        
-        # to add text to plot with multiple objects
-        # for i, rangeval in enumerate(range_value):
-        #     self.ax.annotate(f"{rangeval: .2f} m", (random_theta[i], range_value[i]), textcoords="offset points", xytext=(0,10), ha='center', c='w') # add range label to dot
-        
-        #to add text to plot with one object
-        self.ax.annotate(f"{range_value: .2f} m", (random_theta, range_value), textcoords="offset points", xytext=(0,10), ha='center', c='w') # add range label to dot
+        # Add shading
+        self.shaded = self.ax.fill_between(self.theta, 0, range_value, where=(self.theta >= np.radians(60)) & (self.theta <= np.radians(121)),interpolate=True, alpha=0.4, color='#378805')
+        self.shaded_area = self.shaded.get_paths()[0]
+        self.shaded_center = self.shaded_area.vertices.mean(axis=0)
+        self.ax.text(self.shaded_center[0], self.shaded_center[1], f'{range_value: .2f} m', va='center', ha='left', color='#86dc3d', fontsize=10) # add range label to dot
         self.canvas.draw()
-    
-    def update_rawdata(self, raw_data):
-        """
-        Update the raw data plot with new data.
-
-        Parameters:
-            data (array-like): The new data to plot.
-
-        Returns:
-            None
-        """
-        self.ax2.clear() # clear the figure
-        self.ax2.set_title('Raw Data', c='w') # set title
-        self.ax2.plot(raw_data, c='y') # plot rawdata
-        self.ax2.set_xlim([0, 200]) # set x limit
-        self.canvasx.draw()
-    
-    def update_spectrum(self, spectrum_data):
-        """
-        Update the spectrum plot with new data.
-
-        Parameters:
-            data (list): The new data to plot.
-
-        Returns:
-            None
-        """
-        self.ax3.clear() # clear the figure
-        self.ax3.set_title('Spektrum', c='w') # set title
-        self.ax3.plot(spectrum_data, c='y') # plot the spectrum
-        self.canvasx.draw() 
         
     def start_animation(self):
         self.anim = FuncAnimation(self.canvas, self.update_dot, interval=1)
@@ -226,12 +172,10 @@ if __name__ == '__main__':
         s[nSampleX:nSample] = 0 # remove noise
         s = s*np.hamming(nSample) # windowing 
         raw = s # raw data
-        plot.update_rawdata(raw) # plot the raw data
         spectrum = 20*np.log10(abs(np.fft.rfft(s))/(nSampleX) + 0.001) # make it to logaritmic scale
         spectrum = spectrum*spectrum/15 # increase contrast
         
         temp_spect.append(spectrum[50:150]) # store every 5 spectrum
-        plot.update_spectrum(spectrum[50:150]) # update spectrum
         
         # peaks = getPeak(spectrum[50:150])
         # ranges = to_range_2(peaks)
