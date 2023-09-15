@@ -30,6 +30,11 @@ class MainWindow(QMainWindow):
         self.canvas = FigureCanvas(self.figure)
         layout.addWidget(self.canvas)
         
+        # create another matplotlib figure for raw and spectrum plot
+        self.figurex = Figure(figsize=(8, 6), facecolor='k', tight_layout=True)
+        self.canvasx = FigureCanvas(self.figurex)
+        layout.addWidget(self.canvasx) 
+        
         self.ax = self.figure.add_subplot(111, projection='polar', facecolor='black')
         self.ax.set_xlim([0.0,np.pi]) # set x limit
         self.ax.spines['polar'].set_color('#39ff14') # set spine color
@@ -39,8 +44,22 @@ class MainWindow(QMainWindow):
         self.ax.tick_params(axis='both',colors='#39ff14') # set tick's color 
         self.ax.grid(color='#2bd208',alpha=0.3, linewidth=1) # grid color
         
-        self.canvas.draw()
+        # set up for ax2
+        self.ax2 = self.figurex.add_subplot(211, facecolor='#000000') # add figure
+        self.ax2.set_title('Spectrum', c='w') # set title
+        self.ax2.tick_params(axis='both',colors='w') # set tick's color to white
+        self.ax2.spines['bottom'].set_color('w') # set bottom spine's color to white
+        self.ax2.spines['left'].set_color('w') # set left spine's color to white
         
+        # set up for ax3
+        self.ax3 = self.figurex.add_subplot(212, facecolor='#000000') # add figure
+        self.ax3.set_title('Raw Data', c='w') # set title
+        self.ax3.tick_params(axis='both',colors='w') # set tick's color to white
+        self.ax3.spines['bottom'].set_color('w') # set bottom spine's color to white
+        self.ax3.spines['left'].set_color('w') # set left spine's color to white
+        
+        self.canvas.draw()
+        self.canvasx.draw()
         self.show()
         
     def update_dot(self, range_value):
@@ -68,6 +87,37 @@ class MainWindow(QMainWindow):
         self.shaded_center = self.shaded_area.vertices.mean(axis=0)
         self.ax.text(self.shaded_center[0], self.shaded_center[1], f'{range_value: .2f} m', va='center', ha='left', color='#86dc3d', fontsize=10) # add range label to dot
         self.canvas.draw()
+        
+    def update_rawdata(self, raw_data):
+        """
+        Update the raw data plot with new data.
+
+        Parameters:
+            data (array-like): The new data to plot.
+
+        Returns:
+            None
+        """
+        self.ax2.clear() # clear the figure
+        self.ax2.set_title('Raw Data', c='w') # set title
+        self.ax2.plot(raw_data, c='y') # plot rawdata
+        self.ax2.set_xlim([0, 200]) # set x limit
+        self.canvasx.draw()
+        
+    def update_spectrum(self, spectrum_data):
+        """
+        Update the spectrum plot with new data.
+
+        Parameters:
+            data (list): The new data to plot.
+
+        Returns:
+            None
+        """
+        self.ax3.clear() # clear the figure
+        self.ax3.set_title('Spektrum', c='w') # set title
+        self.ax3.plot(spectrum_data, c='y') # plot the spectrum
+        self.canvasx.draw() 
         
     def start_animation(self):
         self.anim = FuncAnimation(self.canvas, self.update_dot, interval=1)
@@ -172,8 +222,11 @@ if __name__ == '__main__':
         s[nSampleX:nSample] = 0 # remove noise
         s = s*np.hamming(nSample) # windowing 
         raw = s # raw data
+        plot.update_rawdata(raw)
+        
         spectrum = 20*np.log10(abs(np.fft.rfft(s))/(nSampleX) + 0.001) # make it to logaritmic scale
         spectrum = spectrum*spectrum/15 # increase contrast
+        plot.update_spectrum(spectrum)
         
         temp_spect.append(spectrum[50:150]) # store every 5 spectrum
         
