@@ -45,18 +45,18 @@ class MainWindow(QMainWindow):
         self.ax.grid(color='#2bd208',alpha=0.3, linewidth=1) # grid color
         
         # set up for ax2
-        self.ax2 = self.figurex.add_subplot(211, facecolor='#000000') # add figure
-        self.ax2.set_title('Spectrum', c='w') # set title
-        self.ax2.tick_params(axis='both',colors='w') # set tick's color to white
-        self.ax2.spines['bottom'].set_color('w') # set bottom spine's color to white
-        self.ax2.spines['left'].set_color('w') # set left spine's color to white
+        self.ax2 = self.figurex.add_subplot(211, facecolor='black') # add figure
+        self.ax2.set_title('Spectrum', c='#39ff14') # set title
+        self.ax2.tick_params(axis='both',colors='#39ff14') # set tick's color to white
+        self.ax2.spines['bottom'].set_color('#39ff14') # set bottom spine's color to white
+        self.ax2.spines['left'].set_color('#39ff14') # set left spine's color to white
         
         # set up for ax3
-        self.ax3 = self.figurex.add_subplot(212, facecolor='#000000') # add figure
-        self.ax3.set_title('Raw Data', c='w') # set title
-        self.ax3.tick_params(axis='both',colors='w') # set tick's color to white
-        self.ax3.spines['bottom'].set_color('w') # set bottom spine's color to white
-        self.ax3.spines['left'].set_color('w') # set left spine's color to white
+        self.ax3 = self.figurex.add_subplot(212, facecolor='black') # add figure
+        self.ax3.set_title('Raw Data', c='#39ff14') # set title
+        self.ax3.tick_params(axis='both',colors='#39ff14') # set tick's color to white
+        self.ax3.spines['bottom'].set_color('#39ff14') # set bottom spine's color to white
+        self.ax3.spines['left'].set_color('#39ff14') # set left spine's color to white
         
         self.canvas.draw()
         self.canvasx.draw()
@@ -99,8 +99,8 @@ class MainWindow(QMainWindow):
             None
         """
         self.ax2.clear() # clear the figure
-        self.ax2.set_title('Raw Data', c='w') # set title
-        self.ax2.plot(raw_data, c='y') # plot rawdata
+        self.ax2.set_title('Raw Data', c='#39ff14') # set title
+        self.ax2.plot(raw_data, c='#86dc3d') # plot rawdata
         self.ax2.set_xlim([0, 200]) # set x limit
         self.canvasx.draw()
         
@@ -115,8 +115,8 @@ class MainWindow(QMainWindow):
             None
         """
         self.ax3.clear() # clear the figure
-        self.ax3.set_title('Spektrum', c='w') # set title
-        self.ax3.plot(spectrum_data, c='y') # plot the spectrum
+        self.ax3.set_title('Spektrum', c='#39ff14') # set title
+        self.ax3.plot(spectrum_data, c='#86dc3d') # plot the spectrum
         self.canvasx.draw() 
         
     def start_animation(self):
